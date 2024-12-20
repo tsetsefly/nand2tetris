@@ -4,7 +4,7 @@
 [Project description](https://drive.google.com/file/d/1CITliwTJzq19ibBF5EeuNBZ3MJ01dKoI/view)
 [Module 8 lecture notes](https://drive.google.com/file/d/1uKGRMnL-gqk9DsgeN50z0EpHoSMWe6F5/view)
 
-[venv tutorial](https://www.youtube.com/watch?v=N5vscPTWKOk)
+###[venv tutorial](https://www.youtube.com/watch?v=N5vscPTWKOk)
 Create a new virtual environment:
 ```
 Copypython -m venv myproject_env
