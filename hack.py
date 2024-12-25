@@ -123,20 +123,50 @@ def create_binary_c_instruct(parts):
 
 
 def main():
-    a_number_string = "7" # test code
-    a_number = int(a_number_string)
-    a_instruct = create_binary_number_string(a_number)
-    # print(a_instruct) # test code
-    # print(type(a_instruct)) # test code
+	if len(sys.argv) != 3:
+		print("Usage: python3 script.py input_file output_file")
+		sys.exit(1)
 
-    c_instruct_string = "A=-1"
-    c_instruct_parts = parse_c_instruction(c_instruct_string)
-    c_instruct = create_binary_c_instruct(c_instruct_parts)
-    print(c_instruct)
-    # print(f"\nInstruction: {c_instruct_string}") # test code
-    # print(f"Destination: {c_instruct_parts['dest']}") # test code
-    # print(f"Computation: {c_instruct_parts['comp']}") # test code
-    # print(f"Jump: {c_instruct_parts['jump']}") # test code
+	input_file = sys.argv[1]
+	output_file = sys.argv[2]
+
+	if not os.path.exists(input_file):
+		print(f"Error: Input file '{input_file}' not found")
+		sys.exit(1)
+
+	try:
+		with open(input_file, 'r') as infile:
+			lines = infile.readlines()
+
+			processed_lines = []
+			for line in lines:
+				line = line.strip()
+				# add stuff here
+				processed_lines.append(line)
+
+		with open(output_file, 'w') as outfile:
+			for line in processed_lines:
+				outfile.write(line + '\n')
+
+	except Exception as e:
+		print(f"An error occured: {str(e)}")
+		sys.exit(1)
+
+
+	a_number_string = "7" # test code
+	a_number = int(a_number_string)
+	a_instruct = create_binary_number_string(a_number)
+	# print(a_instruct) # test code
+	# print(type(a_instruct)) # test code
+
+	c_instruct_string = "A=-1"
+	c_instruct_parts = parse_c_instruction(c_instruct_string)
+	c_instruct = create_binary_c_instruct(c_instruct_parts)
+	print(c_instruct)
+	# print(f"\nInstruction: {c_instruct_string}") # test code
+	# print(f"Destination: {c_instruct_parts['dest']}") # test code
+	# print(f"Computation: {c_instruct_parts['comp']}") # test code
+	# print(f"Jump: {c_instruct_parts['jump']}") # test code
 
 if __name__ == "__main__":
     main()
