@@ -7,7 +7,7 @@
 ### [venv tutorial](https://www.youtube.com/watch?v=N5vscPTWKOk)
 Create a new virtual environment:
 ```
-Copypython -m venv myproject_env
+python -m venv myproject_env
 ```
 
 Activate virtual environment
