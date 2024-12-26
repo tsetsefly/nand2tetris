@@ -122,6 +122,10 @@ def create_binary_c_instruct(parts):
 	return c_instruct_binary
 
 
+def remove_comments_and_trim(line):
+	return line.split("//")[0].strip()
+
+
 def main():
 	if len(sys.argv) != 3:
 		print("Usage: python3 script.py input_file output_file")
@@ -140,7 +144,8 @@ def main():
 
 			processed_lines = []
 			for line in lines:
-				line = line.strip()
+				# line = line.strip()
+				line = remove_comments_and_trim(line)
 				# add stuff here
 				processed_lines.append(line)
 
