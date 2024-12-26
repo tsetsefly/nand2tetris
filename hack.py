@@ -112,10 +112,12 @@ def create_binary_c_instruct(parts):
 		"M":	"001",
 		"D":	"010",
 		"DM":	"011",
+		"MD":	"011", # to handle "Known bug" in https://drive.google.com/file/d/1CITliwTJzq19ibBF5EeuNBZ3MJ01dKoI/view
 		"A":	"100",
 		"AM":	"101",
 		"AD":	"110",
-		"ADM":	"111"
+		"ADM":	"111",
+		"AMD":	"111" # to handle "Known bug" in https://drive.google.com/file/d/1CITliwTJzq19ibBF5EeuNBZ3MJ01dKoI/view
 	}
 	jump_table = {
 		"null":	"000",
