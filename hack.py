@@ -146,7 +146,21 @@ def main():
 			for line in lines:
 				# line = line.strip()
 				line = remove_comments_and_trim(line)
-				# add stuff here
+				
+				if line:
+					if line[0] == "@":
+						# a_number_string = "7" # test code
+						a_number_string = line.split("@")[1]
+						a_number = int(a_number_string)
+						a_instruct = create_binary_number_string(a_number)
+						line = a_instruct
+					else:
+						# c_instruct_string = "A=-1"
+						c_instruct_string = line
+						c_instruct_parts = parse_c_instruction(c_instruct_string)
+						c_instruct = create_binary_c_instruct(c_instruct_parts)
+						line = c_instruct
+						# print(c_instruct)
 				processed_lines.append(line)
 
 		with open(output_file, 'w') as outfile:
@@ -157,17 +171,16 @@ def main():
 		print(f"An error occured: {str(e)}")
 		sys.exit(1)
 
-
-	a_number_string = "7" # test code
-	a_number = int(a_number_string)
-	a_instruct = create_binary_number_string(a_number)
 	# print(a_instruct) # test code
 	# print(type(a_instruct)) # test code
+	# a_number_string = "7" # test code
+	# a_number = int(a_number_string)
+	# a_instruct = create_binary_number_string(a_number)
 
-	c_instruct_string = "A=-1"
-	c_instruct_parts = parse_c_instruction(c_instruct_string)
-	c_instruct = create_binary_c_instruct(c_instruct_parts)
-	print(c_instruct)
+	# c_instruct_string = "A=-1"
+	# c_instruct_parts = parse_c_instruction(c_instruct_string)
+	# c_instruct = create_binary_c_instruct(c_instruct_parts)
+	# print(c_instruct)
 	# print(f"\nInstruction: {c_instruct_string}") # test code
 	# print(f"Destination: {c_instruct_parts['dest']}") # test code
 	# print(f"Computation: {c_instruct_parts['comp']}") # test code
