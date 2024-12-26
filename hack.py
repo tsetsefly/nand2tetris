@@ -19,13 +19,14 @@ PREDEFINED_SYMBOLS = {
 	"R14":	"14",
 	"R15":	"15",
 	"SCREEN":	"16384",
-	"KDB":		"24576",
+	"KBD":		"24576",
 	"SP":	"0",
 	"LCL":	"1",
 	"ARG":	"2",
 	"THIS":	"3",
 	"THAT":	"4"
 }
+
 
 def create_binary_number_string(a_number):
 	no_pad_binary = bin(a_number)[2:]
@@ -72,6 +73,7 @@ def find_comp_type(comp, comp_0_table, comp_1_table):
 
 def create_binary_c_instruct(parts):
 	a_value = "0"
+	comp = "0"
 
 	comp_0_table = {
 		"0":	"101010",
@@ -152,9 +154,26 @@ def remove_comments_and_trim(line):
 	return line.split("//")[0].strip()
 
 
+def first_pass(lines):
+	label_counter = 0
+	label_table = {}
+
+	for line in lines:
+		line = remove_comments_and_trim(line)
+
+		if line[0] == "(":
+		    label_table.update({
+		        line[1:-1]: str(label_counter)
+		    })
+		else:
+			label_counter += 1
+	print(label_table)
+	return label_table
+
+
 def main():
-	line_counter = 0
 	variable_counter = 16
+	label_table = {}
 
 	if len(sys.argv) != 3:
 		print("Usage: python3 script.py input_file output_file")
@@ -171,29 +190,36 @@ def main():
 		with open(input_file, 'r') as infile:
 			lines = infile.readlines()
 
-			processed_lines = []
-			for line in lines:
-				# line = line.strip()
-				line = remove_comments_and_trim(line)
-				
-				if line:
-					if line[0] == "@" and line[1:].isdigit():
-						# a_number_string = "7" # test code
-						a_number_string = line.split("@")[1]
-						a_number = int(a_number_string)
-						a_instruct = create_binary_number_string(a_number)
-						line = a_instruct
-					elif line[0] == "@" and line.split("@")[1] in PREDEFINED_SYMBOLS:
-						print("I am here")
-						line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(line.split("@")[1])))
-					else:
-						# c_instruct_string = "A=-1"
-						c_instruct_string = line
-						c_instruct_parts = parse_c_instruction(c_instruct_string)
-						c_instruct = create_binary_c_instruct(c_instruct_parts)
-						line = c_instruct
-						# print(c_instruct)
-				processed_lines.append(line)
+		label_table = first_pass(lines)
+
+		processed_lines = []
+		for line in lines:
+			# line = line.strip()
+			line = remove_comments_and_trim(line)
+			
+			if line:
+				if line[0] == "@" and line[1:].isdigit():
+					# a_number_string = "7" # test code
+					a_number_string = line.split("@")[1]
+					a_number = int(a_number_string)
+					a_instruct = create_binary_number_string(a_number)
+					line = a_instruct
+				elif line[0] == "@" and line.split("@")[1] in PREDEFINED_SYMBOLS:
+					# print("I am here") # test code
+					line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(line.split("@")[1])))
+				elif line[0] == "@" and line.split("@")[1] in label_table:
+					line = create_binary_number_string(int(label_table.get(line.split("@")[1])))
+				elif line[0] == "(":
+					continue
+				else:
+					# c_instruct_string = "A=-1"
+					c_instruct_string = line
+					c_instruct_parts = parse_c_instruction(c_instruct_string)
+					c_instruct = create_binary_c_instruct(c_instruct_parts)
+					# print("I am here") # test code
+					line = c_instruct
+					# print(c_instruct)
+			processed_lines.append(line)
 
 		with open(output_file, 'w') as outfile:
 			for line in processed_lines:

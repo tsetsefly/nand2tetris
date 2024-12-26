@@ -1,3 +1,10 @@
 @7
+(LOOP)
 A=-1
+@SCREEN
+@KBD
+@10
+(STOP)
+@SCREEN
+@STOP
 @SCREEN
