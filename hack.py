@@ -172,8 +172,9 @@ def first_pass(lines):
 
 
 def main():
-	variable_counter = 16
+	var_counter = 16
 	label_table = {}
+	var_table = {}
 
 	if len(sys.argv) != 3:
 		print("Usage: python3 script.py input_file output_file")
@@ -209,6 +210,15 @@ def main():
 					line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(line.split("@")[1])))
 				elif line[0] == "@" and line.split("@")[1] in label_table:
 					line = create_binary_number_string(int(label_table.get(line.split("@")[1])))
+				elif line[0] == "@" and line.split("@")[1]:
+					if line.split("@")[1] in var_table:
+						line = create_binary_number_string(int(var_table.get(line.split("@")[1])))
+					else:
+						var_table.update({
+				    		line.split("@")[1]:str(var_counter)
+						})
+						line = create_binary_number_string(var_counter)
+						var_counter += 1
 				elif line[0] == "(":
 					continue
 				else:

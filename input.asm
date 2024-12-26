@@ -1,6 +1,7 @@
 @7
 (LOOP)
 A=-1
+@sum
 @SCREEN
 @KBD
 @10
@@ -8,3 +9,5 @@ A=-1
 @SCREEN
 @STOP
 @SCREEN
+@sum
+@i
