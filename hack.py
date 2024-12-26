@@ -1,6 +1,32 @@
 import os
 import sys
 
+PREDEFINED_SYMBOLS = {
+	"R0":	"0",
+	"R1":	"1",
+	"R2":	"2",
+	"R3":	"3",
+	"R4":	"4",
+	"R5":	"5",
+	"R6":	"6",
+	"R7":	"7",
+	"R8":	"8",
+	"R9":	"9",
+	"R10":	"10",
+	"R11":	"11",
+	"R12":	"12",
+	"R13":	"13",
+	"R14":	"14",
+	"R15":	"15",
+	"SCREEN":	"16384",
+	"KDB":		"24576",
+	"SP":	"0",
+	"LCL":	"1",
+	"ARG":	"2",
+	"THIS":	"3",
+	"THAT":	"4"
+}
+
 def create_binary_number_string(a_number):
 	no_pad_binary = bin(a_number)[2:]
 	pad_binary = no_pad_binary.zfill(16)
@@ -127,6 +153,9 @@ def remove_comments_and_trim(line):
 
 
 def main():
+	line_counter = 0
+	variable_counter = 16
+
 	if len(sys.argv) != 3:
 		print("Usage: python3 script.py input_file output_file")
 		sys.exit(1)
@@ -148,12 +177,15 @@ def main():
 				line = remove_comments_and_trim(line)
 				
 				if line:
-					if line[0] == "@":
+					if line[0] == "@" and line[1:].isdigit():
 						# a_number_string = "7" # test code
 						a_number_string = line.split("@")[1]
 						a_number = int(a_number_string)
 						a_instruct = create_binary_number_string(a_number)
 						line = a_instruct
+					elif line[0] == "@" and line.split("@")[1] in PREDEFINED_SYMBOLS:
+						print("I am here")
+						line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(line.split("@")[1])))
 					else:
 						# c_instruct_string = "A=-1"
 						c_instruct_string = line
