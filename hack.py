@@ -152,25 +152,29 @@ def create_binary_c_instruct(parts):
 	return c_instruct_binary
 
 
-def remove_comments_and_trim(line):
-	return line.split("//")[0].strip()
-
+def clean_line(line):
+    if line.split("//")[0].strip() == '':
+        return None
+    else:
+        return line.split("//")[0].strip()
 
 def first_pass(lines):
-	label_counter = 0
-	label_table = {}
+    label_counter = 0
+    label_table = {}
+    
+    for line in lines:
+        cleaned_line = clean_line(line)  # Store the result in a new variable
 
-	for line in lines:
-		line = remove_comments_and_trim(line)
-
-		if line[0] == "(":
-		    label_table.update({
-		        line[1:-1]: str(label_counter)
-		    })
-		else:
-			label_counter += 1
-	print(label_table)
-	return label_table
+        if cleaned_line is None:  # Proper way to check for None
+            continue
+        elif cleaned_line[0] == "(":  # Use the cleaned_line variable
+            label_table.update({
+                cleaned_line[1:-1]: str(label_counter)
+            })
+        else:
+            label_counter += 1
+            
+    return label_table
 
 
 def main():
@@ -197,41 +201,36 @@ def main():
 
 		processed_lines = []
 		for line in lines:
-			# line = line.strip()
-			line = remove_comments_and_trim(line)
+			cleaned_line = clean_line(line)
 			
-			if line:
-				if line[0] == "@" and line[1:].isdigit():
-					# a_number_string = "7" # test code
-					a_number_string = line.split("@")[1]
+			if cleaned_line:
+				if cleaned_line[0] == "@" and cleaned_line[1:].isdigit():
+					a_number_string = cleaned_line.split("@")[1]
 					a_number = int(a_number_string)
 					a_instruct = create_binary_number_string(a_number)
-					line = a_instruct
-				elif line[0] == "@" and line.split("@")[1] in PREDEFINED_SYMBOLS:
-					# print("I am here") # test code
-					line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(line.split("@")[1])))
-				elif line[0] == "@" and line.split("@")[1] in label_table:
-					line = create_binary_number_string(int(label_table.get(line.split("@")[1])))
-				elif line[0] == "@" and line.split("@")[1]:
-					if line.split("@")[1] in var_table:
-						line = create_binary_number_string(int(var_table.get(line.split("@")[1])))
+					cleaned_line = a_instruct
+				elif cleaned_line[0] == "@" and cleaned_line.split("@")[1] in PREDEFINED_SYMBOLS:
+					cleaned_line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(cleaned_line.split("@")[1])))
+				elif cleaned_line[0] == "@" and cleaned_line.split("@")[1] in label_table:
+					cleaned_line = create_binary_number_string(int(label_table.get(cleaned_line.split("@")[1])))
+				elif cleaned_line[0] == "@" and cleaned_line.split("@")[1]:
+					if cleaned_line.split("@")[1] in var_table:
+						cleaned_line = create_binary_number_string(int(var_table.get(cleaned_line.split("@")[1])))
 					else:
 						var_table.update({
-				    		line.split("@")[1]:str(var_counter)
+				    		cleaned_line.split("@")[1]:str(var_counter)
 						})
-						line = create_binary_number_string(var_counter)
+						cleaned_line = create_binary_number_string(var_counter)
 						var_counter += 1
-				elif line[0] == "(":
+				elif cleaned_line[0] == "(":
 					continue
 				else:
-					# c_instruct_string = "A=-1"
-					c_instruct_string = line
+					c_instruct_string = cleaned_line
 					c_instruct_parts = parse_c_instruction(c_instruct_string)
 					c_instruct = create_binary_c_instruct(c_instruct_parts)
-					# print("I am here") # test code
-					line = c_instruct
-					# print(c_instruct)
-			processed_lines.append(line)
+					cleaned_line = c_instruct
+			if cleaned_line is not None:
+				processed_lines.append(cleaned_line)
 
 		with open(output_file, 'w') as outfile:
 			for line in processed_lines:
@@ -240,21 +239,6 @@ def main():
 	except Exception as e:
 		print(f"An error occured: {str(e)}")
 		sys.exit(1)
-
-	# print(a_instruct) # test code
-	# print(type(a_instruct)) # test code
-	# a_number_string = "7" # test code
-	# a_number = int(a_number_string)
-	# a_instruct = create_binary_number_string(a_number)
-
-	# c_instruct_string = "A=-1"
-	# c_instruct_parts = parse_c_instruction(c_instruct_string)
-	# c_instruct = create_binary_c_instruct(c_instruct_parts)
-	# print(c_instruct)
-	# print(f"\nInstruction: {c_instruct_string}") # test code
-	# print(f"Destination: {c_instruct_parts['dest']}") # test code
-	# print(f"Computation: {c_instruct_parts['comp']}") # test code
-	# print(f"Jump: {c_instruct_parts['jump']}") # test code
 
 if __name__ == "__main__":
     main()
