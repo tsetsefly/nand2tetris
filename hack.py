@@ -1,3 +1,6 @@
+# Python 'Hack'-assembler program for Nand2Tetris Part 1: Project 6
+# https://www.coursera.org/learn/build-a-computer/programming/cLdpd/project-6
+
 import os
 import sys
 
@@ -27,20 +30,80 @@ PREDEFINED_SYMBOLS = {
 	"THAT":	"4"
 }
 
+COMP_0_TABLE = {
+	"0":	"101010",
+	"1":	"111111",
+	"-1":	"111010",
+	"D":	"001100",
+	"A":	"110000",
+	"!D":	"001101",
+	"!A":	"110001",
+	"-D":	"001111",
+	"-A":	"110011",
+	"D+1":	"011111",
+	"A+1":	"110111",
+	"D-1":	"001110",
+	"A-1":	"110010",
+	"D+A":	"000010",
+	"D-A":	"010011",
+	"A-D":	"000111",
+	"D&A":	"000000",
+	"D|A":	"010101"
+}
 
+COMP_1_TABLE = {
+	"M":	"110000",
+	"!M":	"110001",
+	"-M":	"110011",
+	"M+1":	"110111",
+	"M-1":	"110010",
+	"D+M":	"000010",
+	"D-M":	"010011",
+	"M-D":	"000111",
+	"D&M":	"000000",
+	"D|M":	"010101"
+}
+
+DEST_TABLE = {
+	"null":	"000",
+	"M":	"001",
+	"D":	"010",
+	"DM":	"011",
+	"MD":	"011", # to handle "Known bug" in https://drive.google.com/file/d/1CITliwTJzq19ibBF5EeuNBZ3MJ01dKoI/view
+	"A":	"100",
+	"AM":	"101",
+	"AD":	"110",
+	"ADM":	"111",
+	"AMD":	"111" # to handle "Known bug" in https://drive.google.com/file/d/1CITliwTJzq19ibBF5EeuNBZ3MJ01dKoI/view
+}
+
+JUMP_TABLE = {
+	"null":	"000",
+	"JGT":	"001",
+	"JEQ":	"010",
+	"JGE":	"011",
+	"JLT":	"100",
+	"JNE":	"101",
+	"JLE":	"110",
+	"JMP":	"111"
+}
+
+
+# Inputs a-instruction and outputs 16-bit binary instruction, a 15-bit binary number
 def create_binary_number_string(a_number):
 	no_pad_binary = bin(a_number)[2:]
 	pad_binary = no_pad_binary.zfill(16)
 	return pad_binary
 
 
+# Parses different types of instructions for C-instruction parts
 def parse_c_instruction(instruction):
-    # Initialize parts
+    # Initialize parts of C-instruction segments
     dest = None
     comp = None
     jump = None
     
-    # Check for '=' first
+    # Check for presence of '=' first
     if "=" in instruction:
         dest, rest = instruction.split("=", 1)  # Split on first '=' only
     else:
@@ -61,113 +124,63 @@ def parse_c_instruction(instruction):
     }
 
 
-def find_comp_type(comp, comp_0_table, comp_1_table):
-	if comp in comp_0_table:
+# Determines whether comparison value is referencing table 0 or table 1
+def find_comp_type(comp):
+	if comp in COMP_0_TABLE:
 		return "0"
 
-	if comp in comp_1_table:
+	if comp in COMP_1_TABLE:
 		return "1"
 
 	return None
 
 
+# Converting hack C-instructions to binary instructions
 def create_binary_c_instruct(parts):
 	a_value = "0"
 	comp = "0"
 
-	comp_0_table = {
-		"0":	"101010",
-		"1":	"111111",
-		"-1":	"111010",
-		"D":	"001100",
-		"A":	"110000",
-		"!D":	"001101",
-		"!A":	"110001",
-		"-D":	"001111",
-		"-A":	"110011",
-		"D+1":	"011111",
-		"A+1":	"110111",
-		"D-1":	"001110",
-		"A-1":	"110010",
-		"D+A":	"000010",
-		"D-A":	"010011",
-		"A-D":	"000111",
-		"D&A":	"000000",
-		"D|A":	"010101"
-	}
-	comp_1_table = {
-		"M":	"110000",
-		"!M":	"110001",
-		"-M":	"110011",
-		"M+1":	"110111",
-		"M-1":	"110010",
-		"D+M":	"000010",
-		"D-M":	"010011",
-		"M-D":	"000111",
-		"D&M":	"000000",
-		"D|M":	"010101"
-	}
-	dest_table = {
-		"null":	"000",
-		"M":	"001",
-		"D":	"010",
-		"DM":	"011",
-		"MD":	"011", # to handle "Known bug" in https://drive.google.com/file/d/1CITliwTJzq19ibBF5EeuNBZ3MJ01dKoI/view
-		"A":	"100",
-		"AM":	"101",
-		"AD":	"110",
-		"ADM":	"111",
-		"AMD":	"111" # to handle "Known bug" in https://drive.google.com/file/d/1CITliwTJzq19ibBF5EeuNBZ3MJ01dKoI/view
-	}
-	jump_table = {
-		"null":	"000",
-		"JGT":	"001",
-		"JEQ":	"010",
-		"JGE":	"011",
-		"JLT":	"100",
-		"JNE":	"101",
-		"JLE":	"110",
-		"JMP":	"111"
-	}
+	# Finding destination binary value in table
+	dest = DEST_TABLE.get(parts['dest'], "000")
 
-	# finding destination binary value in table
-	dest = dest_table.get(parts['dest'], "000")
-
-	# finding comparison binary value in table
-	comp_type = find_comp_type(parts['comp'], comp_0_table, comp_1_table)
+	# Finding comparison binary value in table
+	comp_type = find_comp_type(parts['comp'])
 	if comp_type == "0":
-		comp = comp_0_table.get(parts['comp'], None)
+		comp = COMP_0_TABLE.get(parts['comp'], None)
 	elif comp_type == "1":
-		comp = comp_1_table.get(parts['comp'], None)
+		comp = COMP_1_TABLE.get(parts['comp'], None)
 		a_value = "1"
 	
-	# finding jump binary value in table
+	# Finding jump binary value in table
 	if parts['jump']:
-		jump = jump_table.get(parts['jump'], "000")
+		jump = JUMP_TABLE.get(parts['jump'], "000")
 	else:
 		jump = "000"
 
-	c_instruct_binary = "111" + a_value + comp + dest + jump
+	c_instruct_binary = "111" + a_value + comp + dest + jump # Constructing binary C-instruction
 
 	return c_instruct_binary
 
 
+# Cleans a line of whitespace, spaces, comments
 def clean_line(line):
     if line.split("//")[0].strip() == '':
         return None
     else:
         return line.split("//")[0].strip()
 
+
+# Initial pass through code to construct table for label symbols
 def first_pass(lines):
     label_counter = 0
     label_table = {}
     
     for line in lines:
-        cleaned_line = clean_line(line)  # Store the result in a new variable
+        cleaned_line = clean_line(line)
 
-        if cleaned_line is None:  # Proper way to check for None
+        if cleaned_line is None: # Continue if whitespace or full line comment
             continue
-        elif cleaned_line[0] == "(":  # Use the cleaned_line variable
+        elif cleaned_line[0] == "(": # Creates dictionary entry for label
             label_table.update({
                 cleaned_line[1:-1]: str(label_counter)
             })
@@ -226,7 +239,7 @@ def main():
 					continue
 				else:
 					c_instruct_string = cleaned_line
-					c_instruct_parts = parse_c_instruction(c_instruct_string)
+					c_instruct_parts = parse_c_instruction(c_instruct_string) # creates dictionary with C-instruction parts
 					c_instruct = create_binary_c_instruct(c_instruct_parts)
 					cleaned_line = c_instruct
 			if cleaned_line is not None:
