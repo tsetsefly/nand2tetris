@@ -162,7 +162,7 @@ def create_binary_c_instruct(parts):
 	return c_instruct_binary
 
 
-# Cleans a line of whitespace, spaces, comments
+# Cleans a line of whitespace, empty line, spaces, comments
 def clean_line(line):
     if line.split("//")[0].strip() == '':
         return None
@@ -171,14 +171,14 @@ def clean_line(line):
 
 
 # Initial pass through code to construct table for label symbols
-def first_pass(lines):
+def get_label_table(lines):
     label_counter = 0
     label_table = {}
     
     for line in lines:
         cleaned_line = clean_line(line)
 
-        if cleaned_line is None: # Continue if whitespace or full line comment
+        if cleaned_line is None: # Continue if whitespace, empty line and/or full line comment
             continue
         elif cleaned_line[0] == "(": # Creates dictionary entry for label
             label_table.update({
@@ -190,10 +190,56 @@ def first_pass(lines):
     return label_table
 
 
-def main():
+def process_instructions(lines, label_table):
 	var_counter = 16
-	label_table = {}
 	var_table = {}
+	processed_lines = []
+
+	for line in lines:
+		cleaned_line = clean_line(line)
+		
+		if cleaned_line is not None:
+			# Handling A-instructions
+			if cleaned_line[0] == "@" and cleaned_line[1:].isdigit():
+				a_number = int(cleaned_line.split("@")[1])
+				cleaned_line = create_binary_number_string(a_number)
+			
+			# Checking for predefined symbols
+			elif cleaned_line[0] == "@" and cleaned_line.split("@")[1] in PREDEFINED_SYMBOLS:
+				cleaned_line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(cleaned_line.split("@")[1])))
+			
+			# Checking for label symbols
+			elif cleaned_line[0] == "@" and cleaned_line.split("@")[1] in label_table:
+				cleaned_line = create_binary_number_string(int(label_table.get(cleaned_line.split("@")[1])))
+			
+			# Checking for variable symbols
+			elif cleaned_line[0] == "@" and cleaned_line.split("@")[1]:
+				if cleaned_line.split("@")[1] in var_table:
+					cleaned_line = create_binary_number_string(int(var_table.get(cleaned_line.split("@")[1])))
+				else:
+					var_table.update({
+			    		cleaned_line.split("@")[1]:str(var_counter)
+					})
+					cleaned_line = create_binary_number_string(var_counter)
+					var_counter += 1
+			
+			# Skipping binary instruction creation for lines with label symbol initiation
+			elif cleaned_line[0] == "(":
+				continue
+			
+			# Converting C-instructions to binary
+			else:
+				c_instruct_parts = parse_c_instruction(cleaned_line) # Creates dictionary with C-instruction parts
+				cleaned_line = create_binary_c_instruct(c_instruct_parts) # Combines C-instruction parts together to store as binary instruction
+			
+			processed_lines.append(cleaned_line)
+
+	return processed_lines
+
+
+def main():
+	label_table = {}
+	processed_lines = []
 
 	if len(sys.argv) != 3:
 		print("Usage: python3 script.py input_file output_file")
@@ -210,40 +256,8 @@ def main():
 		with open(input_file, 'r') as infile:
 			lines = infile.readlines()
 
-		label_table = first_pass(lines)
-
-		processed_lines = []
-		for line in lines:
-			cleaned_line = clean_line(line)
-			
-			if cleaned_line:
-				if cleaned_line[0] == "@" and cleaned_line[1:].isdigit():
-					a_number_string = cleaned_line.split("@")[1]
-					a_number = int(a_number_string)
-					a_instruct = create_binary_number_string(a_number)
-					cleaned_line = a_instruct
-				elif cleaned_line[0] == "@" and cleaned_line.split("@")[1] in PREDEFINED_SYMBOLS:
-					cleaned_line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(cleaned_line.split("@")[1])))
-				elif cleaned_line[0] == "@" and cleaned_line.split("@")[1] in label_table:
-					cleaned_line = create_binary_number_string(int(label_table.get(cleaned_line.split("@")[1])))
-				elif cleaned_line[0] == "@" and cleaned_line.split("@")[1]:
-					if cleaned_line.split("@")[1] in var_table:
-						cleaned_line = create_binary_number_string(int(var_table.get(cleaned_line.split("@")[1])))
-					else:
-						var_table.update({
-				    		cleaned_line.split("@")[1]:str(var_counter)
-						})
-						cleaned_line = create_binary_number_string(var_counter)
-						var_counter += 1
-				elif cleaned_line[0] == "(":
-					continue
-				else:
-					c_instruct_string = cleaned_line
-					c_instruct_parts = parse_c_instruction(c_instruct_string) # creates dictionary with C-instruction parts
-					c_instruct = create_binary_c_instruct(c_instruct_parts)
-					cleaned_line = c_instruct
-			if cleaned_line is not None:
-				processed_lines.append(cleaned_line)
+		label_table = get_label_table(lines)
+		processed_lines = process_instructions(lines, label_table)
 
 		with open(output_file, 'w') as outfile:
 			for line in processed_lines:
@@ -252,6 +266,7 @@ def main():
 	except Exception as e:
 		print(f"An error occured: {str(e)}")
 		sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
