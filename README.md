@@ -54,7 +54,7 @@ Test programs are available in two versions:
 python3 hack.py <input.asm> <output.hack>
 ```
 
-This will generate an output file named `<input.hack>` in the same directory as the input file.
+This will generate an output file named `<output.hack>` in the same directory as the input file.
 
 ## Known Issues
 
