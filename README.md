@@ -51,7 +51,7 @@ Test programs are available in two versions:
 ## Usage
 
 ```bash
-./assembler <input.asm>
+python3 hack.py <input.asm> <output.hack>
 ```
 
 This will generate an output file named `<input.hack>` in the same directory as the input file.
