@@ -119,7 +119,7 @@ def parse_c_instruction(instruction):
 
 	return {
 		"dest": dest,
-	    "comp": comp,
+		"comp": comp,
 		"jump": jump
 	}
 
@@ -171,22 +171,22 @@ def clean_line(line):
 
 
 # Initial pass through code to construct table for label symbols
-	def get_label_table(lines):
+def get_label_table(lines):
 	label_counter = 0
 	label_table = {}
 
 	for line in lines:
 		cleaned_line = clean_line(line)
 
-	    if cleaned_line is None: # Continue if whitespace, empty line and/or full line comment
+		if cleaned_line is None: # Continue if whitespace, empty line and/or full line comment
 			continue
-	    elif cleaned_line[0] == "(": # Creates dictionary entry for label
+		elif cleaned_line[0] == "(": # Creates dictionary entry for label
 			label_table.update({
 				cleaned_line[1:-1]: str(label_counter)
 			})
 		else:
 			label_counter += 1
-	        
+
 	return label_table
 
 
