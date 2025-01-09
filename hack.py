@@ -98,30 +98,30 @@ def create_binary_number_string(a_number):
 
 # Parses different types of instructions for C-instruction parts
 def parse_c_instruction(instruction):
-    # Initialize parts of C-instruction segments
-    dest = None
-    comp = None
-    jump = None
-    
-    # Check for presence of '=' first
-    if "=" in instruction:
-        dest, rest = instruction.split("=", 1)  # Split on first '=' only
-    else:
-        rest = instruction
-        dest = None
-    
-    # Check for ';' in the remaining part
-    if ";" in rest:
-        comp, jump = rest.split(";", 1)  # Split on first ';' only
-    else:
-        comp = rest
-        jump = None
-    
-    return {
-        "dest": dest,
-        "comp": comp,
-        "jump": jump
-    }
+	# Initialize parts of C-instruction segments
+	dest = None
+	comp = None
+	jump = None
+
+	# Check for presence of '=' first
+	if "=" in instruction:
+		dest, rest = instruction.split("=", 1)  # Split on first '=' only
+	else:
+		rest = instruction
+		dest = None
+
+	# Check for ';' in the remaining part
+	if ";" in rest:
+		comp, jump = rest.split(";", 1)  # Split on first ';' only
+	else:
+		comp = rest
+		jump = None
+
+	return {
+		"dest": dest,
+	    "comp": comp,
+		"jump": jump
+	}
 
 
 # Determines whether comparison value is referencing table 0 or table 1
@@ -164,30 +164,30 @@ def create_binary_c_instruct(parts):
 
 # Cleans a line of whitespace, empty line, spaces, comments
 def clean_line(line):
-    if line.split("//")[0].strip() == '':
-        return None
-    else:
-        return line.split("//")[0].strip()
+	if line.split("//")[0].strip() == '':
+		return None
+	else:
+		return line.split("//")[0].strip()
 
 
 # Initial pass through code to construct table for label symbols
-def get_label_table(lines):
-    label_counter = 0
-    label_table = {}
-    
-    for line in lines:
-        cleaned_line = clean_line(line)
+	def get_label_table(lines):
+	label_counter = 0
+	label_table = {}
 
-        if cleaned_line is None: # Continue if whitespace, empty line and/or full line comment
-            continue
-        elif cleaned_line[0] == "(": # Creates dictionary entry for label
-            label_table.update({
-                cleaned_line[1:-1]: str(label_counter)
-            })
-        else:
-            label_counter += 1
-            
-    return label_table
+	for line in lines:
+		cleaned_line = clean_line(line)
+
+	    if cleaned_line is None: # Continue if whitespace, empty line and/or full line comment
+			continue
+	    elif cleaned_line[0] == "(": # Creates dictionary entry for label
+			label_table.update({
+				cleaned_line[1:-1]: str(label_counter)
+			})
+		else:
+			label_counter += 1
+	        
+	return label_table
 
 
 def process_instructions(lines, label_table):
@@ -269,4 +269,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+	main()
