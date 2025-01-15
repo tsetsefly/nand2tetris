@@ -3,90 +3,7 @@
 
 import os
 import sys
-
-PREDEFINED_SYMBOLS = {
-	"R0":	"0",
-	"R1":	"1",
-	"R2":	"2",
-	"R3":	"3",
-	"R4":	"4",
-	"R5":	"5",
-	"R6":	"6",
-	"R7":	"7",
-	"R8":	"8",
-	"R9":	"9",
-	"R10":	"10",
-	"R11":	"11",
-	"R12":	"12",
-	"R13":	"13",
-	"R14":	"14",
-	"R15":	"15",
-	"SCREEN":	"16384",
-	"KBD":		"24576",
-	"SP":	"0",
-	"LCL":	"1",
-	"ARG":	"2",
-	"THIS":	"3",
-	"THAT":	"4"
-}
-
-COMP_0_TABLE = {
-	"0":	"101010",
-	"1":	"111111",
-	"-1":	"111010",
-	"D":	"001100",
-	"A":	"110000",
-	"!D":	"001101",
-	"!A":	"110001",
-	"-D":	"001111",
-	"-A":	"110011",
-	"D+1":	"011111",
-	"A+1":	"110111",
-	"D-1":	"001110",
-	"A-1":	"110010",
-	"D+A":	"000010",
-	"D-A":	"010011",
-	"A-D":	"000111",
-	"D&A":	"000000",
-	"D|A":	"010101"
-}
-
-COMP_1_TABLE = {
-	"M":	"110000",
-	"!M":	"110001",
-	"-M":	"110011",
-	"M+1":	"110111",
-	"M-1":	"110010",
-	"D+M":	"000010",
-	"D-M":	"010011",
-	"M-D":	"000111",
-	"D&M":	"000000",
-	"D|M":	"010101"
-}
-
-DEST_TABLE = {
-	"null":	"000",
-	"M":	"001",
-	"D":	"010",
-	"DM":	"011",
-	"MD":	"011", # to handle "Known bug" in https://drive.google.com/file/d/1CITliwTJzq19ibBF5EeuNBZ3MJ01dKoI/view
-	"A":	"100",
-	"AM":	"101",
-	"AD":	"110",
-	"ADM":	"111",
-	"AMD":	"111" # to handle "Known bug" in https://drive.google.com/file/d/1CITliwTJzq19ibBF5EeuNBZ3MJ01dKoI/view
-}
-
-JUMP_TABLE = {
-	"null":	"000",
-	"JGT":	"001",
-	"JEQ":	"010",
-	"JGE":	"011",
-	"JLT":	"100",
-	"JNE":	"101",
-	"JLE":	"110",
-	"JMP":	"111"
-}
+from constants import PREDEFINED_SYMBOLS, COMP_0_TABLE, COMP_1_TABLE, DEST_TABLE, JUMP_TABLE
 
 
 # Inputs a-instruction and outputs 16-bit binary instruction, a 15-bit binary number
@@ -238,9 +155,6 @@ def process_instructions(lines, label_table):
 
 
 def main():
-	label_table = {}
-	processed_lines = []
-
 	if len(sys.argv) != 3:
 		print("Usage: python3 script.py input_file output_file")
 		sys.exit(1)
@@ -252,6 +166,8 @@ def main():
 		print(f"Error: Input file '{input_file}' not found")
 		sys.exit(1)
 
+	label_table = {} # move later
+	processed_lines = [] # move later
 	try:
 		with open(input_file, 'r') as infile:
 			lines = infile.readlines()
