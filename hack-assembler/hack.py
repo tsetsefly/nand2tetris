@@ -4,6 +4,7 @@
 import os
 import sys
 from constants import PREDEFINED_SYMBOLS, COMP_0_TABLE, COMP_1_TABLE, DEST_TABLE, JUMP_TABLE
+from typing import List, Dict, Optional, Tuple
 
 
 # Inputs a-instruction and outputs 16-bit binary instruction, a 15-bit binary number
@@ -79,32 +80,32 @@ def create_binary_c_instruct(parts):
   return c_instruct_binary
 
 
-# Cleans a line of whitespace, empty line, spaces, comments
-def clean_line(line):
-  if line.split("//")[0].strip() == '':
-    return None
-  else:
-    return line.split("//")[0].strip()
+# formats line to remove whitespace, spaces, comments
+def format_line(line: str) -> Optional[str]:
+  line_parts = line.split("//", 1)
+  formatted_line = line_parts[0].strip()
+  return formatted_line or None
 
 
-# Initial pass through code to construct table for label symbols
-def get_label_table(lines):
+# initial pass through code to construct table for label symbols
+def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], Dict[str, str]]:
+  label_table: Dict[str,str] = {}
   label_counter = 0
-  label_table = {}
+  formatted_input: List[Optional[str]] = []
 
-  for line in lines:
-    cleaned_line = clean_line(line)
+  for line in input_lines:
+    formatted_line = format_line(line)
+    formatted_input.append(formatted_line)
 
-    if cleaned_line is None: # Continue if whitespace, empty line and/or full line comment
+    # creates table of label symbols, requires full pass of input to populate
+    if not formatted_line: # continue if whitespace, empty line and/or full line comment
       continue
-    elif cleaned_line[0] == "(": # Creates dictionary entry for label
-      label_table.update({
-        cleaned_line[1:-1]: str(label_counter)
-      })
+    if formatted_line[0] == "(": # creates dictionary entry for label
+      label_table[formatted_line[1:-1]] = str(label_counter)
     else:
       label_counter += 1
 
-  return label_table
+  return formatted_input, label_table
 
 
 def process_instructions(lines, label_table):
@@ -113,7 +114,7 @@ def process_instructions(lines, label_table):
   processed_lines = []
 
   for line in lines:
-    cleaned_line = clean_line(line)
+    cleaned_line = format_line(line)
     
     if cleaned_line is not None:
       # Handling A-instructions
@@ -166,14 +167,16 @@ def main():
     print(f"Error: Input file '{input_file}' not found")
     sys.exit(1)
 
-  label_table = {} # move later
-  processed_lines = [] # move later
   try:
+    label_table = {}
+    processed_lines = []
+    formatted_input: List[Optional[str]] = []
+    
     with open(input_file, 'r') as infile:
-      lines = infile.readlines()
+      unformatted_input = infile.readlines()
 
-    label_table = get_label_table(lines)
-    processed_lines = process_instructions(lines, label_table)
+    formatted_input, label_table = read_and_format_input(unformatted_input)
+    processed_lines = process_instructions(unformatted_input, label_table)
 
     with open(output_file, 'w') as outfile:
       for line in processed_lines:
