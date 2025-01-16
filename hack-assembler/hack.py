@@ -108,51 +108,94 @@ def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], 
   return formatted_input, label_table
 
 
-def process_instructions(lines, label_table):
+def convert_c_instruction(instruction: str) -> str:
+    """Process C-instructions and return the binary result."""
+    c_instruct_parts = parse_c_instruction(instruction)
+    return create_binary_c_instruct(c_instruct_parts)
+
+
+def convert_at_sign_instruction(instruction: str, var_table: dict, label_table: dict, var_counter: int) -> tuple[str, dict, int]:
+    value = instruction[1:]  # Remove @ symbol
+    
+    if value.isdigit():
+        return create_binary_number_string(int(value)), var_table, var_counter
+        
+    if value in PREDEFINED_SYMBOLS:
+        return create_binary_number_string(int(PREDEFINED_SYMBOLS[value])), var_table, var_counter
+        
+    if value in label_table:
+        return create_binary_number_string(int(label_table[value])), var_table, var_counter
+        
+    # Handle variables
+    if value in var_table:
+        return create_binary_number_string(int(var_table[value])), var_table, var_counter
+        
+    # New variable
+    var_table[value] = str(var_counter)
+    result = create_binary_number_string(var_counter)
+    return result, var_table, var_counter + 1
+
+
+def convert_instructions_to_binary(formatted_input: list[str], label_table: dict) -> list[str]:
   var_counter = 16
   var_table = {}
-  processed_lines = []
+  converted_instructions = []
 
-  for line in lines:
-    cleaned_line = format_line(line)
-    
-    if cleaned_line is not None:
-      # Handling A-instructions
-      if cleaned_line[0] == "@" and cleaned_line[1:].isdigit():
-        a_number = int(cleaned_line.split("@")[1])
-        cleaned_line = create_binary_number_string(a_number)
-      
-      # Checking for predefined symbols
-      elif cleaned_line[0] == "@" and cleaned_line.split("@")[1] in PREDEFINED_SYMBOLS:
-        cleaned_line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(cleaned_line.split("@")[1])))
-      
-      # Checking for label symbols
-      elif cleaned_line[0] == "@" and cleaned_line.split("@")[1] in label_table:
-        cleaned_line = create_binary_number_string(int(label_table.get(cleaned_line.split("@")[1])))
-      
-      # Checking for variable symbols
-      elif cleaned_line[0] == "@" and cleaned_line.split("@")[1]:
-        if cleaned_line.split("@")[1] in var_table:
-          cleaned_line = create_binary_number_string(int(var_table.get(cleaned_line.split("@")[1])))
-        else:
-          var_table.update({
-              cleaned_line.split("@")[1]:str(var_counter)
-          })
-          cleaned_line = create_binary_number_string(var_counter)
-          var_counter += 1
-      
-      # Skipping binary instruction creation for lines with label symbol initiation
-      elif cleaned_line[0] == "(":
-        continue
-      
-      # Converting C-instructions to binary
-      else:
-        c_instruct_parts = parse_c_instruction(cleaned_line) # Creates dictionary with C-instruction parts
-        cleaned_line = create_binary_c_instruct(c_instruct_parts) # Combines C-instruction parts together to store as binary instruction
-      
-      processed_lines.append(cleaned_line)
+  for line in formatted_input:
+    # shouldn't need this anymore, right?
+    # if line is None:
+    #   continue
 
-  return processed_lines
+    # skip label declaration lines
+    if line.startswith("("):
+      continue
+
+    # convert 
+    if line.startswith("@"):
+      binary_line, var_table, var_counter = convert_at_sign_instruction(line, var_table, label_table, var_counter)
+      converted_instructions.append(binary_line)
+      continue
+
+    binary_line = convert_c_instruction(line)
+    converted_instructions.append(binary_line)
+
+    # if line is not None:
+    #   # Handling A-instructions
+    #   if line[0] == "@" and line[1:].isdigit():
+    #     a_number = int(line.split("@")[1])
+    #     line = create_binary_number_string(a_number)
+      
+    #   # Checking for predefined symbols
+    #   elif line[0] == "@" and line.split("@")[1] in PREDEFINED_SYMBOLS:
+    #     line = create_binary_number_string(int(PREDEFINED_SYMBOLS.get(line.split("@")[1])))
+      
+    #   # Checking for label symbols
+    #   elif line[0] == "@" and line.split("@")[1] in line:
+    #     line = create_binary_number_string(int(line.get(line.split("@")[1])))
+      
+    #   # Checking for variable symbols
+    #   elif line[0] == "@" and line.split("@")[1]:
+    #     if line.split("@")[1] in var_table:
+    #       line = create_binary_number_string(int(var_table.get(line.split("@")[1])))
+    #     else:
+    #       var_table.update({
+    #           line.split("@")[1]:str(var_counter)
+    #       })
+    #       line = create_binary_number_string(var_counter)
+    #       var_counter += 1
+      
+    #   # Skipping binary instruction creation for lines with label symbol initiation
+    #   elif line[0] == "(":
+    #     continue
+      
+    #   # Converting C-instructions to binary
+    #   else:
+    #     c_instruct_parts = parse_c_instruction(line) # Creates dictionary with C-instruction parts
+    #     line = create_binary_c_instruct(c_instruct_parts) # Combines C-instruction parts together to store as binary instruction
+      
+    #   converted_instructions.append(line)
+
+  return converted_instructions
 
 
 def main():
@@ -168,18 +211,19 @@ def main():
     sys.exit(1)
 
   try:
+    unformatted_input = []
     label_table = {}
-    processed_lines = []
+    converted_instructions = []
     formatted_input: List[Optional[str]] = []
-    
+
     with open(input_file, 'r') as infile:
       unformatted_input = infile.readlines()
 
     formatted_input, label_table = read_and_format_input(unformatted_input)
-    processed_lines = process_instructions(unformatted_input, label_table)
+    converted_instructions = convert_instructions_to_binary(formatted_input, label_table)
 
     with open(output_file, 'w') as outfile:
-      for line in processed_lines:
+      for line in converted_instructions:
         outfile.write(line + '\n')
 
   except Exception as e:
