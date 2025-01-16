@@ -87,7 +87,7 @@ def format_line(line: str) -> Optional[str]:
   return formatted_line or None
 
 
-# initial pass through code to construct table for label symbols
+# initial pass through code to construct table for label symbols and format input
 def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], Dict[str, str]]:
   label_table: Dict[str,str] = {}
   label_counter = 0
@@ -95,12 +95,13 @@ def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], 
 
   for line in input_lines:
     formatted_line = format_line(line)
-    formatted_input.append(formatted_line)
+    if formatted_line:
+      formatted_input.append(formatted_line)
 
     # creates table of label symbols, requires full pass of input to populate
     if not formatted_line: # continue if whitespace, empty line and/or full line comment
       continue
-    if formatted_line[0] == "(": # creates dictionary entry for label
+    if formatted_line[0] == "(": # creates label definition
       label_table[formatted_line[1:-1]] = str(label_counter)
     else:
       label_counter += 1
@@ -142,6 +143,7 @@ def convert_instructions_to_binary(formatted_input: list[str], label_table: dict
   converted_instructions = []
 
   for line in formatted_input:
+    # print(line)
     # shouldn't need this anymore, right?
     # if line is None:
     #   continue
