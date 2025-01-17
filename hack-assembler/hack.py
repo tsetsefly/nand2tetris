@@ -44,6 +44,7 @@ def format_line(line: str) -> Optional[str]:
   return formatted_line or None
 
 
+# Take formatted instruction list, determines instruction type for each line and converts to binary
 def convert_instructions_to_binary(formatted_input: list[str], label_table: dict) -> list[str]:
   var_counter = 16
   var_table = {}
@@ -95,6 +96,7 @@ def create_binary_number_string(binary_number: int) -> str:
   return format(binary_number, '016b')
 
 
+# Takes C-instruction parts, then converts to binary
 def convert_c_instruction(instruction: str) -> str:
   c_instruction_parts = get_c_instruction_parts(instruction)
   
@@ -107,9 +109,9 @@ def convert_c_instruction(instruction: str) -> str:
   return f"111{a_bit}{comp_bits}{dest_bits}{jump_bits}"
 
 
+# Parses C-instructions into (up to) 3 distinct instruction parts
 def get_c_instruction_parts(instruction: str) -> CInstructionParts:
-  """Parse a C-instruction into its components.
-  
+  """
   Possible formats:
   - dest=comp;jump
   - dest=comp
@@ -118,14 +120,14 @@ def get_c_instruction_parts(instruction: str) -> CInstructionParts:
   """
   c_instruction_parts = CInstructionParts()
   
-  # Split on '=' first if it exists
+  # Split on '=' first if it exists in instructions
   if "=" in instruction:
       dest, rest = instruction.split("=", 1)
       c_instruction_parts.dest = dest
   else:
       rest = instruction
   
-  # Split remaining part on ';' if it exists
+  # Split remaining part on ';' if it exists in instructions
   if ";" in rest:
       comp, jump = rest.split(";", 1)
       c_instruction_parts.comp = comp
@@ -136,8 +138,8 @@ def get_c_instruction_parts(instruction: str) -> CInstructionParts:
   return c_instruction_parts
 
 
+# Inputs 'comp' part of C-instruction and converts both 'a-bit' and 'comp' into binary
 def convert_abit_and_comp_binary(comp: str) -> tuple[str, str]:
-  # Returns (a_bit, comp_bits)
   if comp in COMP_0_TABLE:
       return "0", COMP_0_TABLE[comp]
   elif comp in COMP_1_TABLE:
@@ -146,33 +148,49 @@ def convert_abit_and_comp_binary(comp: str) -> tuple[str, str]:
       raise ValueError(f"Invalid comp instruction: {comp}")
 
 
-def main():
+def parse_arguments() -> Tuple[str, str]:
   if len(sys.argv) != 3:
-    print("Usage: python3 script.py input_file output_file")
-    sys.exit(1)
+      print("Usage: python3 script.py input_file output_file")
+      sys.exit(1)
+  return sys.argv[1], sys.argv[2]
 
-  input_file = sys.argv[1]
-  output_file = sys.argv[2]
 
-  if not os.path.exists(input_file):
-    print(f"Error: Input file '{input_file}' not found")
-    sys.exit(1)
+def validate_input_file(input_file) -> None:
+    if not os.path.exists(input_file):
+        print(f"Error: Input file '{input_file}' not found")
+        sys.exit(1)
 
+
+def read_input_file(input_file) -> List[str]:
+    try:
+        with open(input_file, 'r') as infile:
+            return infile.readlines()
+    except Exception as e:
+        print(f"Error reading input file: {str(e)}")
+        sys.exit(1)
+
+
+def write_output_file(output_file, instructions) -> None:
+    try:
+        with open(output_file, 'w') as outfile:
+            for line in instructions:
+                outfile.write(line + '\n')
+    except Exception as e:
+        print(f"Error writing output file: {str(e)}")
+        sys.exit(1)
+
+
+def main():
+  input_file, output_file = parse_arguments()
+  validate_input_file(input_file)
+  
   try:
-    unformatted_input = []
-    label_table = {}
-    converted_instructions = []
-    formatted_input: List[Optional[str]] = []
-
-    with open(input_file, 'r') as infile:
-      unformatted_input = infile.readlines()
-
+    unformatted_input = read_input_file(input_file)
+    
     formatted_input, label_table = read_and_format_input(unformatted_input)
     converted_instructions = convert_instructions_to_binary(formatted_input, label_table)
 
-    with open(output_file, 'w') as outfile:
-      for line in converted_instructions:
-        outfile.write(line + '\n')
+    write_output_file(output_file, converted_instructions)
 
   except Exception as e:
     print(f"An error occured: {str(e)}")
