@@ -37,140 +37,156 @@ def read_input_file(input_file) -> List[str]:
     sys.exit(1)
 
 
-# Initial pass through input to construct table for label symbols AND create formatted input list
-def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], Dict[str, str]]:
-  label_table: Dict[str,str] = {}
-  label_counter = 0
-  formatted_input: List[Optional[str]] = []
+class AssemblyFormatter:
 
-  for line in input_lines:
-    formatted_line = format_line(line)
-    if formatted_line:
-      formatted_input.append(formatted_line)
+  @staticmethod
+  def format_line(line: str) -> Optional[str]:
+    """Formats line to remove whitespace, spaces, comments"""
+    line_parts = line.split("//", 1)
+    formatted_line = line_parts[0].strip()
+    return formatted_line or None
 
-    # Continues if whitespace, empty line and/or full line comment
-    if not formatted_line: 
-      continue
 
-    # Creates table of label symbols, requires full pass of input to populate
-    if formatted_line[0] == "(":
-      label_table[formatted_line[1:-1]] = str(label_counter)
+  @classmethod
+  def read_and_format_input(cls, input_lines: List[str]) -> Tuple[List[str], Dict[str, str]]:
+    """Initial pass through input to construct table for label symbols AND create formatted input list"""
+    label_table: Dict[str,str] = {}
+    label_counter = 0
+    formatted_input: List[Optional[str]] = []
+
+    for line in input_lines:
+      formatted_line = cls.format_line(line)
+      if formatted_line:
+        formatted_input.append(formatted_line)
+
+      # Continues if whitespace, empty line and/or full line comment
+      if not formatted_line: 
+        continue
+
+      # Creates table of label symbols, requires full pass of input to populate
+      if formatted_line[0] == "(":
+        label_table[formatted_line[1:-1]] = str(label_counter)
+      else:
+        label_counter += 1
+
+    return formatted_input, label_table
+
+
+class BinaryConverter:
+
+  @staticmethod
+  def create_binary_number(binary_number: int) -> str:
+    """Inputs a number and outputs a binary number as a string formatted for Hack binary"""
+    return format(binary_number, '016b')
+
+
+  @staticmethod
+  def convert_abit_and_comp_binary(comp: str) -> tuple[str, str]:
+    """Inputs 'comp' part of C-instruction and converts both 'a-bit' and 'comp' into binary"""
+    if comp in COMP_0_TABLE:
+      return "0", COMP_0_TABLE[comp]
+    elif comp in COMP_1_TABLE:
+      return "1", COMP_1_TABLE[comp]
     else:
-      label_counter += 1
-
-  return formatted_input, label_table
+      raise ValueError(f"Invalid comp instruction: {comp}")
 
 
-# Formats line to remove whitespace, spaces, comments
-def format_line(line: str) -> Optional[str]:
-  line_parts = line.split("//", 1)
-  formatted_line = line_parts[0].strip()
-  return formatted_line or None
+  @classmethod
+  def get_c_instruction_parts(cls, instruction: str) -> CInstructionParts:
+    """
+    Parses C-instructions into (up to) 3 distinct instruction parts
+
+    Possible formats:
+    - dest=comp;jump
+    - dest=comp
+    - comp;jump
+    - comp
+    """
+    c_instruction_parts = CInstructionParts()
+
+    # Split on '=' first if it exists in instructions
+    if "=" in instruction:
+      dest, rest = instruction.split("=", 1)
+      c_instruction_parts.dest = dest
+    else:
+      rest = instruction
+
+    # Split remaining part on ';' if it exists in instructions
+    if ";" in rest:
+      comp, jump = rest.split(";", 1)
+      c_instruction_parts.comp = comp
+      c_instruction_parts.jump = jump
+    else:
+      c_instruction_parts.comp = rest
+
+    return c_instruction_parts
 
 
-# Take formatted instruction list, determines instruction type for each line and converts to binary
-def convert_instructions_to_binary(formatted_input: list[str], label_table: dict) -> list[str]:
-  var_counter = 16
-  var_table = {}
-  converted_instructions = []
-
-  for line in formatted_input:
+  @classmethod
+  def convert_c_instruction(cls, instruction: str) -> str:
+    """Takes C-instruction parts, then converts to binary"""
+    c_instruction_parts = cls.get_c_instruction_parts(instruction)
     
-    # Skip label declaration lines
-    if line.startswith("("):
-      continue
-
-    # Convert variables / label symbol references to binary
-    if line.startswith("@"):
-      binary_line, var_table, var_counter = convert_at_sign_instruction(line, var_table, label_table, var_counter)
-      converted_instructions.append(binary_line)
-      continue
-
-    # Convert C-instructions to binary
-    binary_line = convert_c_instruction(line)
-    converted_instructions.append(binary_line)
-
-  return converted_instructions
+    # Get binary values for each C-instruction part
+    a_bit, comp_bits = cls.convert_abit_and_comp_binary(c_instruction_parts.comp)
+    dest_bits = DEST_TABLE.get(c_instruction_parts.dest, "000")
+    jump_bits = JUMP_TABLE.get(c_instruction_parts.jump, "000")
+    
+    # Construct final binary instruction
+    return f"111{a_bit}{comp_bits}{dest_bits}{jump_bits}"
 
 
-# Determines appropriate binary conversions for different instructions with @ symbols
-def convert_at_sign_instruction(instruction: str, var_table: dict, label_table: dict, var_counter: int) -> tuple[str, dict, int]:
-  value = instruction[1:]  # Removes @ symbol
-  
-  if value.isdigit():
-      return create_binary_number_string(int(value)), var_table, var_counter
+class HackAssembler:
+
+  def __init__(self):
+    self.var_counter = 16
+    self.var_table: Dict[str, str] = {}
+
+
+  def convert_at_sign_instruction(self, instruction: str, label_table: Dict[str, str]) -> str:
+    """Determines appropriate binary conversions for different instructions with @ symbols"""
+    value = instruction[1:]  # Removes @ symbol
+    
+    if value.isdigit():
+        return BinaryConverter.create_binary_number(int(value))
+        
+    if value in PREDEFINED_SYMBOLS:
+        return BinaryConverter.create_binary_number(int(PREDEFINED_SYMBOLS[value]))
+        
+    if value in label_table:
+        return BinaryConverter.create_binary_number(int(label_table[value]))
+        
+    if value in self.ar_table:
+        return BinaryConverter.create_binary_number(int(self.var_table[value]))
+        
+    # If new variable detected
+    self.var_table[value] = str(self.var_counter)
+    result = BinaryConverter.create_binary_number(self.var_counter)
+    self.var_counter += 1
+
+    return result
+
+
+  def assemble(self, formatted_input: List[str], label_table: Dict[str, str]) -> List[str]:
+    """Take formatted instruction list, determines instruction type for each line and converts to binary"""
+    binary_instructions = []
+
+    for line in formatted_input:
       
-  if value in PREDEFINED_SYMBOLS:
-      return create_binary_number_string(int(PREDEFINED_SYMBOLS[value])), var_table, var_counter
-      
-  if value in label_table:
-      return create_binary_number_string(int(label_table[value])), var_table, var_counter
-      
-  if value in var_table:
-      return create_binary_number_string(int(var_table[value])), var_table, var_counter
-      
-  # If new variable detected
-  var_table[value] = str(var_counter)
-  result = create_binary_number_string(var_counter)
+      # Skip label declaration lines
+      if line.startswith("("):
+        continue
 
-  return result, var_table, var_counter + 1
+      # Convert variables / label symbol references to binary
+      if line.startswith("@"): 
+        binary = self.convert_at_sign_instruction(line, label_table)
+      # Convert variables / label symbol references to binary
+      else:
+        binary = BinaryConverter.convert_c_instruction(line)
 
+      binary_instructions.append(binary)
 
-# Inputs a number and outputs a binary number as a string formatted for Hack binary
-def create_binary_number_string(binary_number: int) -> str:
-  return format(binary_number, '016b')
-
-
-# Takes C-instruction parts, then converts to binary
-def convert_c_instruction(instruction: str) -> str:
-  c_instruction_parts = get_c_instruction_parts(instruction)
-  
-  # Get binary values for each C-instruction part
-  a_bit, comp_bits = convert_abit_and_comp_binary(c_instruction_parts.comp)
-  dest_bits = DEST_TABLE.get(c_instruction_parts.dest, "000")
-  jump_bits = JUMP_TABLE.get(c_instruction_parts.jump, "000")
-  
-  # Construct final binary instruction
-  return f"111{a_bit}{comp_bits}{dest_bits}{jump_bits}"
-
-
-# Parses C-instructions into (up to) 3 distinct instruction parts
-def get_c_instruction_parts(instruction: str) -> CInstructionParts:
-  """
-  Possible formats:
-  - dest=comp;jump
-  - dest=comp
-  - comp;jump
-  - comp
-  """
-  c_instruction_parts = CInstructionParts()
-  
-  # Split on '=' first if it exists in instructions
-  if "=" in instruction:
-    dest, rest = instruction.split("=", 1)
-    c_instruction_parts.dest = dest
-  else:
-    rest = instruction
-  
-  # Split remaining part on ';' if it exists in instructions
-  if ";" in rest:
-    comp, jump = rest.split(";", 1)
-    c_instruction_parts.comp = comp
-    c_instruction_parts.jump = jump
-  else:
-    c_instruction_parts.comp = rest
-  
-  return c_instruction_parts
-
-
-# Inputs 'comp' part of C-instruction and converts both 'a-bit' and 'comp' into binary
-def convert_abit_and_comp_binary(comp: str) -> tuple[str, str]:
-  if comp in COMP_0_TABLE:
-    return "0", COMP_0_TABLE[comp]
-  elif comp in COMP_1_TABLE:
-    return "1", COMP_1_TABLE[comp]
-  else:
-    raise ValueError(f"Invalid comp instruction: {comp}")
+    return binary_instructions
 
 
 def write_output_file(output_file, instructions) -> None:
@@ -190,10 +206,12 @@ def main():
   try:
     unformatted_input = read_input_file(input_file)
     
-    formatted_input, label_table = read_and_format_input(unformatted_input)
-    converted_instructions = convert_instructions_to_binary(formatted_input, label_table)
+    formatted_input, label_table = AssemblyFormatter.read_and_format_input(unformatted_input)
 
-    write_output_file(output_file, converted_instructions)
+    assembler = HackAssembler()
+    binary_instructions = assembler.assemble(formatted_input, label_table)
+
+    write_output_file(output_file, binary_instructions)
 
   except Exception as e:
     print(f"An error occured: {str(e)}")
