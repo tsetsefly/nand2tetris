@@ -4,14 +4,20 @@
 import os
 import sys
 from constants import PREDEFINED_SYMBOLS, COMP_0_TABLE, COMP_1_TABLE, DEST_TABLE, JUMP_TABLE
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Literal
+from dataclasses import dataclass
 
 
-# Inputs a-instruction and outputs 16-bit binary instruction, a 15-bit binary number
-def create_binary_number_string(a_number):
-  no_pad_binary = bin(a_number)[2:]
-  pad_binary = no_pad_binary.zfill(16)
-  return pad_binary
+@dataclass
+class C_instruction:
+    dest: Optional[str] = None
+    comp: Optional[str] = None
+    jump: Optional[str] = None
+
+
+# Inputs a number and outputs a binary number as a string formatted for Hack binary
+def create_binary_number_string(binary_number: int) -> str:
+    return format(binary_number, '016b')
 
 
 # Parses different types of instructions for C-instruction parts
@@ -80,6 +86,11 @@ def create_binary_c_instruct(parts):
   return c_instruct_binary
 
 
+def convert_c_instruction(instruction: str) -> str:
+  c_instruct_parts = parse_c_instruction(instruction)
+  return create_binary_c_instruct(c_instruct_parts)
+
+
 # Formats line to remove whitespace, spaces, comments
 def format_line(line: str) -> Optional[str]:
   line_parts = line.split("//", 1)
@@ -107,11 +118,6 @@ def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], 
       label_counter += 1
 
   return formatted_input, label_table
-
-
-def convert_c_instruction(instruction: str) -> str:
-    c_instruct_parts = parse_c_instruction(instruction)
-    return create_binary_c_instruct(c_instruct_parts)
 
 
 def convert_at_sign_instruction(instruction: str, var_table: dict, label_table: dict, var_counter: int) -> tuple[str, dict, int]:
