@@ -125,18 +125,18 @@ def get_c_instruction_parts(instruction: str) -> CInstructionParts:
   
   # Split on '=' first if it exists in instructions
   if "=" in instruction:
-      dest, rest = instruction.split("=", 1)
-      c_instruction_parts.dest = dest
+    dest, rest = instruction.split("=", 1)
+    c_instruction_parts.dest = dest
   else:
-      rest = instruction
+    rest = instruction
   
   # Split remaining part on ';' if it exists in instructions
   if ";" in rest:
-      comp, jump = rest.split(";", 1)
-      c_instruction_parts.comp = comp
-      c_instruction_parts.jump = jump
+    comp, jump = rest.split(";", 1)
+    c_instruction_parts.comp = comp
+    c_instruction_parts.jump = jump
   else:
-      c_instruction_parts.comp = rest
+    c_instruction_parts.comp = rest
   
   return c_instruction_parts
 
@@ -144,43 +144,43 @@ def get_c_instruction_parts(instruction: str) -> CInstructionParts:
 # Inputs 'comp' part of C-instruction and converts both 'a-bit' and 'comp' into binary
 def convert_abit_and_comp_binary(comp: str) -> tuple[str, str]:
   if comp in COMP_0_TABLE:
-      return "0", COMP_0_TABLE[comp]
+    return "0", COMP_0_TABLE[comp]
   elif comp in COMP_1_TABLE:
-      return "1", COMP_1_TABLE[comp]
+    return "1", COMP_1_TABLE[comp]
   else:
-      raise ValueError(f"Invalid comp instruction: {comp}")
+    raise ValueError(f"Invalid comp instruction: {comp}")
 
 
 def parse_system_arguments() -> Tuple[str, str]:
   if len(sys.argv) != 3:
-      print("Usage: python3 script.py input_file output_file")
-      sys.exit(1)
+    print("Usage: python3 script.py input_file output_file")
+    sys.exit(1)
   return sys.argv[1], sys.argv[2]
 
 
 def validate_input_file(input_file) -> None:
-    if not os.path.exists(input_file):
-        print(f"Error: Input file '{input_file}' not found")
-        sys.exit(1)
+  if not os.path.exists(input_file):
+    print(f"Error: Input file '{input_file}' not found")
+    sys.exit(1)
 
 
 def read_input_file(input_file) -> List[str]:
-    try:
-        with open(input_file, 'r') as infile:
-            return infile.readlines()
-    except Exception as e:
-        print(f"Error reading input file: {str(e)}")
-        sys.exit(1)
+  try:
+    with open(input_file, 'r') as infile:
+      return infile.readlines()
+  except Exception as e:
+    print(f"Error reading input file: {str(e)}")
+    sys.exit(1)
 
 
 def write_output_file(output_file, instructions) -> None:
-    try:
-        with open(output_file, 'w') as outfile:
-            for line in instructions:
-                outfile.write(line + '\n')
-    except Exception as e:
-        print(f"Error writing output file: {str(e)}")
-        sys.exit(1)
+  try:
+    with open(output_file, 'w') as outfile:
+      for line in instructions:
+          outfile.write(line + '\n')
+  except Exception as e:
+    print(f"Error writing output file: {str(e)}")
+    sys.exit(1)
 
 
 def main():
