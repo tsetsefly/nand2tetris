@@ -10,9 +10,9 @@ from dataclasses import dataclass
 
 @dataclass
 class CInstruction:
-    dest: Optional[str] = None
-    comp: Optional[str] = None
-    jump: Optional[str] = None
+  dest: Optional[str] = None
+  comp: Optional[str] = None
+  jump: Optional[str] = None
 
 
 # Initial pass through input to construct table for label symbols AND create formatted input list
@@ -68,83 +68,83 @@ def convert_instructions_to_binary(formatted_input: list[str], label_table: dict
   return converted_instructions
 
 
-  def convert_at_sign_instruction(instruction: str, var_table: dict, label_table: dict, var_counter: int) -> tuple[str, dict, int]:
-    value = instruction[1:]  # Removes @ symbol
-    
-    # If instruction is an existing case (no changes required to var_table or counter variables)
-    if value.isdigit():
-        return create_binary_number_string(int(value)), var_table, var_counter
-        
-    if value in PREDEFINED_SYMBOLS:
-        return create_binary_number_string(int(PREDEFINED_SYMBOLS[value])), var_table, var_counter
-        
-    if value in label_table:
-        return create_binary_number_string(int(label_table[value])), var_table, var_counter
-        
-    if value in var_table:
-        return create_binary_number_string(int(var_table[value])), var_table, var_counter
-        
-    # If new variable detected
-    var_table[value] = str(var_counter)
-    result = create_binary_number_string(var_counter)
+def convert_at_sign_instruction(instruction: str, var_table: dict, label_table: dict, var_counter: int) -> tuple[str, dict, int]:
+  value = instruction[1:]  # Removes @ symbol
+  
+  # If instruction is an existing case (no changes required to var_table or counter variables)
+  if value.isdigit():
+      return create_binary_number_string(int(value)), var_table, var_counter
+      
+  if value in PREDEFINED_SYMBOLS:
+      return create_binary_number_string(int(PREDEFINED_SYMBOLS[value])), var_table, var_counter
+      
+  if value in label_table:
+      return create_binary_number_string(int(label_table[value])), var_table, var_counter
+      
+  if value in var_table:
+      return create_binary_number_string(int(var_table[value])), var_table, var_counter
+      
+  # If new variable detected
+  var_table[value] = str(var_counter)
+  result = create_binary_number_string(var_counter)
 
-    return result, var_table, var_counter + 1
+  return result, var_table, var_counter + 1
 
 
 # Inputs a number and outputs a binary number as a string formatted for Hack binary
 def create_binary_number_string(binary_number: int) -> str:
-    return format(binary_number, '016b')
+  return format(binary_number, '016b')
 
 
 def convert_c_instruction(instruction: str) -> str:
-    parsed = parse_c_instruction(instruction)
-    
-    # Get binary values for each part
-    a_bit, comp_bits = get_comp_binary(parsed.comp)
-    dest_bits = DEST_TABLE.get(parsed.dest, "000")
-    jump_bits = JUMP_TABLE.get(parsed.jump, "000")
-    
-    # Construct final binary instruction
-    return f"111{a_bit}{comp_bits}{dest_bits}{jump_bits}"
+  parsed = parse_c_instruction(instruction)
+  
+  # Get binary values for each part
+  a_bit, comp_bits = get_comp_binary(parsed.comp)
+  dest_bits = DEST_TABLE.get(parsed.dest, "000")
+  jump_bits = JUMP_TABLE.get(parsed.jump, "000")
+  
+  # Construct final binary instruction
+  return f"111{a_bit}{comp_bits}{dest_bits}{jump_bits}"
 
 
 def parse_c_instruction(instruction: str) -> CInstruction:
-    """Parse a C-instruction into its components.
-    
-    Possible formats:
-    - dest=comp;jump
-    - dest=comp
-    - comp;jump
-    - comp
-    """
-    c_instruction = CInstruction()
-    
-    # Split on '=' first if it exists
-    if "=" in instruction:
-        dest, rest = instruction.split("=", 1)
-        c_instruction.dest = dest
-    else:
-        rest = instruction
-    
-    # Split remaining part on ';' if it exists
-    if ";" in rest:
-        comp, jump = rest.split(";", 1)
-        c_instruction.comp = comp
-        c_instruction.jump = jump
-    else:
-        c_instruction.comp = rest
-    
-    return c_instruction
+  """Parse a C-instruction into its components.
+  
+  Possible formats:
+  - dest=comp;jump
+  - dest=comp
+  - comp;jump
+  - comp
+  """
+  c_instruction = CInstruction()
+  
+  # Split on '=' first if it exists
+  if "=" in instruction:
+      dest, rest = instruction.split("=", 1)
+      c_instruction.dest = dest
+  else:
+      rest = instruction
+  
+  # Split remaining part on ';' if it exists
+  if ";" in rest:
+      comp, jump = rest.split(";", 1)
+      c_instruction.comp = comp
+      c_instruction.jump = jump
+  else:
+      c_instruction.comp = rest
+  
+  return c_instruction
 
 
 def get_comp_binary(comp: str) -> tuple[str, str]:
-    # Returns (a_bit, comp_bits)
-    if comp in COMP_0_TABLE:
-        return "0", COMP_0_TABLE[comp]
-    elif comp in COMP_1_TABLE:
-        return "1", COMP_1_TABLE[comp]
-    else:
-        raise ValueError(f"Invalid comp instruction: {comp}")
+  # Returns (a_bit, comp_bits)
+  if comp in COMP_0_TABLE:
+      return "0", COMP_0_TABLE[comp]
+  elif comp in COMP_1_TABLE:
+      return "1", COMP_1_TABLE[comp]
+  else:
+      raise ValueError(f"Invalid comp instruction: {comp}")
 
 
 
