@@ -80,14 +80,14 @@ def create_binary_c_instruct(parts):
   return c_instruct_binary
 
 
-# formats line to remove whitespace, spaces, comments
+# Formats line to remove whitespace, spaces, comments
 def format_line(line: str) -> Optional[str]:
   line_parts = line.split("//", 1)
   formatted_line = line_parts[0].strip()
   return formatted_line or None
 
 
-# initial pass through code to construct table for label symbols and format input
+# Initial pass through input to construct table for label symbols AND create formatted input list
 def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], Dict[str, str]]:
   label_table: Dict[str,str] = {}
   label_counter = 0
@@ -110,14 +110,14 @@ def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], 
 
 
 def convert_c_instruction(instruction: str) -> str:
-    """Process C-instructions and return the binary result."""
     c_instruct_parts = parse_c_instruction(instruction)
     return create_binary_c_instruct(c_instruct_parts)
 
 
 def convert_at_sign_instruction(instruction: str, var_table: dict, label_table: dict, var_counter: int) -> tuple[str, dict, int]:
-    value = instruction[1:]  # Remove @ symbol
+    value = instruction[1:]  # Removes @ symbol
     
+    # If instruction is an existing case (no changes required to var_table or counter variables)
     if value.isdigit():
         return create_binary_number_string(int(value)), var_table, var_counter
         
@@ -127,13 +127,13 @@ def convert_at_sign_instruction(instruction: str, var_table: dict, label_table: 
     if value in label_table:
         return create_binary_number_string(int(label_table[value])), var_table, var_counter
         
-    # Handle variables
     if value in var_table:
         return create_binary_number_string(int(var_table[value])), var_table, var_counter
         
-    # New variable
+    # If new variable detected
     var_table[value] = str(var_counter)
     result = create_binary_number_string(var_counter)
+
     return result, var_table, var_counter + 1
 
 
@@ -143,21 +143,18 @@ def convert_instructions_to_binary(formatted_input: list[str], label_table: dict
   converted_instructions = []
 
   for line in formatted_input:
-    # print(line)
-    # shouldn't need this anymore, right?
-    # if line is None:
-    #   continue
-
-    # skip label declaration lines
+    
+    # Skip label declaration lines
     if line.startswith("("):
       continue
 
-    # convert 
+    # Convert variables / label symbol references to binary
     if line.startswith("@"):
       binary_line, var_table, var_counter = convert_at_sign_instruction(line, var_table, label_table, var_counter)
       converted_instructions.append(binary_line)
       continue
 
+    # Convert C-instructions to binary
     binary_line = convert_c_instruction(line)
     converted_instructions.append(binary_line)
 
