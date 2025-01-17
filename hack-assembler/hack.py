@@ -15,6 +15,28 @@ class CInstructionParts:
   jump: Optional[str] = None
 
 
+def parse_system_arguments() -> Tuple[str, str]:
+  if len(sys.argv) != 3:
+    print("Usage: python3 script.py input_file output_file")
+    sys.exit(1)
+  return sys.argv[1], sys.argv[2]
+
+
+def validate_input_file(input_file) -> None:
+  if not os.path.exists(input_file):
+    print(f"Error: Input file '{input_file}' not found")
+    sys.exit(1)
+
+
+def read_input_file(input_file) -> List[str]:
+  try:
+    with open(input_file, 'r') as infile:
+      return infile.readlines()
+  except Exception as e:
+    print(f"Error reading input file: {str(e)}")
+    sys.exit(1)
+
+
 # Initial pass through input to construct table for label symbols AND create formatted input list
 def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], Dict[str, str]]:
   label_table: Dict[str,str] = {}
@@ -149,28 +171,6 @@ def convert_abit_and_comp_binary(comp: str) -> tuple[str, str]:
     return "1", COMP_1_TABLE[comp]
   else:
     raise ValueError(f"Invalid comp instruction: {comp}")
-
-
-def parse_system_arguments() -> Tuple[str, str]:
-  if len(sys.argv) != 3:
-    print("Usage: python3 script.py input_file output_file")
-    sys.exit(1)
-  return sys.argv[1], sys.argv[2]
-
-
-def validate_input_file(input_file) -> None:
-  if not os.path.exists(input_file):
-    print(f"Error: Input file '{input_file}' not found")
-    sys.exit(1)
-
-
-def read_input_file(input_file) -> List[str]:
-  try:
-    with open(input_file, 'r') as infile:
-      return infile.readlines()
-  except Exception as e:
-    print(f"Error reading input file: {str(e)}")
-    sys.exit(1)
 
 
 def write_output_file(output_file, instructions) -> None:
