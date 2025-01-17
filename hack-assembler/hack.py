@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class CInstruction:
+class CInstructionParts:
   dest: Optional[str] = None
   comp: Optional[str] = None
   jump: Optional[str] = None
@@ -71,7 +71,6 @@ def convert_instructions_to_binary(formatted_input: list[str], label_table: dict
 def convert_at_sign_instruction(instruction: str, var_table: dict, label_table: dict, var_counter: int) -> tuple[str, dict, int]:
   value = instruction[1:]  # Removes @ symbol
   
-  # If instruction is an existing case (no changes required to var_table or counter variables)
   if value.isdigit():
       return create_binary_number_string(int(value)), var_table, var_counter
       
@@ -97,18 +96,18 @@ def create_binary_number_string(binary_number: int) -> str:
 
 
 def convert_c_instruction(instruction: str) -> str:
-  parsed = parse_c_instruction(instruction)
+  c_instruction_parts = get_c_instruction_parts(instruction)
   
-  # Get binary values for each part
-  a_bit, comp_bits = get_comp_binary(parsed.comp)
-  dest_bits = DEST_TABLE.get(parsed.dest, "000")
-  jump_bits = JUMP_TABLE.get(parsed.jump, "000")
+  # Get binary values for each C-instruction part
+  a_bit, comp_bits = convert_abit_and_comp_binary(c_instruction_parts.comp)
+  dest_bits = DEST_TABLE.get(c_instruction_parts.dest, "000")
+  jump_bits = JUMP_TABLE.get(c_instruction_parts.jump, "000")
   
   # Construct final binary instruction
   return f"111{a_bit}{comp_bits}{dest_bits}{jump_bits}"
 
 
-def parse_c_instruction(instruction: str) -> CInstruction:
+def get_c_instruction_parts(instruction: str) -> CInstructionParts:
   """Parse a C-instruction into its components.
   
   Possible formats:
@@ -117,27 +116,27 @@ def parse_c_instruction(instruction: str) -> CInstruction:
   - comp;jump
   - comp
   """
-  c_instruction = CInstruction()
+  c_instruction_parts = CInstructionParts()
   
   # Split on '=' first if it exists
   if "=" in instruction:
       dest, rest = instruction.split("=", 1)
-      c_instruction.dest = dest
+      c_instruction_parts.dest = dest
   else:
       rest = instruction
   
   # Split remaining part on ';' if it exists
   if ";" in rest:
       comp, jump = rest.split(";", 1)
-      c_instruction.comp = comp
-      c_instruction.jump = jump
+      c_instruction_parts.comp = comp
+      c_instruction_parts.jump = jump
   else:
-      c_instruction.comp = rest
+      c_instruction_parts.comp = rest
   
-  return c_instruction
+  return c_instruction_parts
 
 
-def get_comp_binary(comp: str) -> tuple[str, str]:
+def convert_abit_and_comp_binary(comp: str) -> tuple[str, str]:
   # Returns (a_bit, comp_bits)
   if comp in COMP_0_TABLE:
       return "0", COMP_0_TABLE[comp]
@@ -145,9 +144,6 @@ def get_comp_binary(comp: str) -> tuple[str, str]:
       return "1", COMP_1_TABLE[comp]
   else:
       raise ValueError(f"Invalid comp instruction: {comp}")
-
-
-
 
 
 def main():
