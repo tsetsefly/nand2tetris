@@ -26,10 +26,12 @@ def read_and_format_input(input_lines: List[str]) -> Tuple[List[Optional[str]], 
     if formatted_line:
       formatted_input.append(formatted_line)
 
-    # creates table of label symbols, requires full pass of input to populate
-    if not formatted_line: # continue if whitespace, empty line and/or full line comment
+    # Continues if whitespace, empty line and/or full line comment
+    if not formatted_line: 
       continue
-    if formatted_line[0] == "(": # creates label definition
+
+    # Creates table of label symbols, requires full pass of input to populate
+    if formatted_line[0] == "(":
       label_table[formatted_line[1:-1]] = str(label_counter)
     else:
       label_counter += 1
@@ -69,6 +71,7 @@ def convert_instructions_to_binary(formatted_input: list[str], label_table: dict
   return converted_instructions
 
 
+# Determines appropriate binary conversions for different instructions with @ symbols
 def convert_at_sign_instruction(instruction: str, var_table: dict, label_table: dict, var_counter: int) -> tuple[str, dict, int]:
   value = instruction[1:]  # Removes @ symbol
   
@@ -148,7 +151,7 @@ def convert_abit_and_comp_binary(comp: str) -> tuple[str, str]:
       raise ValueError(f"Invalid comp instruction: {comp}")
 
 
-def parse_arguments() -> Tuple[str, str]:
+def parse_system_arguments() -> Tuple[str, str]:
   if len(sys.argv) != 3:
       print("Usage: python3 script.py input_file output_file")
       sys.exit(1)
@@ -181,7 +184,7 @@ def write_output_file(output_file, instructions) -> None:
 
 
 def main():
-  input_file, output_file = parse_arguments()
+  input_file, output_file = parse_system_arguments()
   validate_input_file(input_file)
   
   try:
