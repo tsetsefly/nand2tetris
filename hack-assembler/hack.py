@@ -156,7 +156,7 @@ class HackAssembler:
     if value in label_table:
         return BinaryConverter.create_binary_number(int(label_table[value]))
         
-    if value in self.ar_table:
+    if value in self.var_table:
         return BinaryConverter.create_binary_number(int(self.var_table[value]))
         
     # If new variable detected
