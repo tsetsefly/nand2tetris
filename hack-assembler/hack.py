@@ -200,10 +200,10 @@ def write_output_file(output_file, instructions) -> None:
 
 
 def main():
-  input_file, output_file = parse_system_arguments()
-  validate_input_file(input_file)
-  
   try:
+    input_file, output_file = parse_system_arguments()
+    validate_input_file(input_file)
+
     unformatted_input = read_input_file(input_file)
     
     formatted_input, label_table = AssemblyFormatter.read_and_format_input(unformatted_input)
