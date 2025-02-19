@@ -54,11 +54,13 @@ Test programs are available in two versions:
 python3 hack.py <input.asm> <output.hack>
 ```
 
+This will generate an output file named `<output.hack>` in the same directory as the input file.
+
 ```
 python3 -m unittest discover tests
 ```
 
-This will generate an output file named `<output.hack>` in the same directory as the input file.
+This will run whatever tests are set up in ```tests/test_hack.py```
 
 ## Known Issues
 
