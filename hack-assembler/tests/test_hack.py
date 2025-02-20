@@ -39,7 +39,22 @@ class TestAssemblyFormatter(unittest.TestCase):
     formatted_input, label_table = self.formatter.read_and_format_input(input_lines)
     
     expected_formatted = ["@100", "(LOOP)", "D=M", "(END)", "@LOOP"]
-    expected_labels = {"LOOP": "1", "END": "2"}  # Changed from "3" to "2"
+    expected_labels = {"LOOP": "1", "END": "2"}
     
     self.assertEqual(formatted_input, expected_formatted)
     self.assertEqual(label_table, expected_labels)
+
+
+class TestBinaryConverter(unittest.TestCase):
+  def test_create_binary_number(self):
+    """Test binary number conversion"""
+    test_cases = [
+      (0, "0000000000000000"),
+      (1, "0000000000000001"),
+      (16384, "0100000000000000"),  # SCREEN address
+      (24576, "0110000000000000"),  # KBD address
+    ]
+    for input_num, expected in test_cases:
+      with self.subTest(input_num=input_num):
+        result = BinaryConverter.create_binary_number(input_num)
+        self.assertEqual(result, expected)
