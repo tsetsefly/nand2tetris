@@ -11,9 +11,6 @@ from hack import (
 )
 
 class TestAssemblyFormatter(unittest.TestCase):
-  def setUp(self):
-    self.formatter = AssemblyFormatter()
-
   def test_format_line_removes_comments(self):
     """Test that comments are properly removed from lines"""
     test_cases = [
@@ -24,7 +21,7 @@ class TestAssemblyFormatter(unittest.TestCase):
     ]
     for input_line, expected in test_cases:
       with self.subTest(input_line=input_line):
-        result = self.formatter.format_line(input_line)
+        result = AssemblyFormatter.format_line(input_line)
         self.assertEqual(result, expected)
 
   def test_read_and_format_input_processes_labels(self):
