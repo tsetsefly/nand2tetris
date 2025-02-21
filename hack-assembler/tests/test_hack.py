@@ -88,3 +88,6 @@ class TestBinaryConverter(unittest.TestCase):
         with self.subTest(input_instruction=input_instruction):
           result = BinaryConverter.convert_c_instruction(input_instruction)
           self.assertEqual(result, expected_binary)
+
+if __name__ == '__main__':
+    unittest.main()
